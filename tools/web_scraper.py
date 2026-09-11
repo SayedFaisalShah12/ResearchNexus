@@ -7,22 +7,11 @@ from langchain_core.tools import tool
 def scrape_webpage(url: str) -> str:
     """
     Fetch and extract readable text from a webpage.
-
-    Args:
-        url: The URL of the webpage to scrape.
-
-    Returns:
-        Cleaned webpage text.
     """
 
     try:
         headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 "
-                "(KHTML, like Gecko) "
-                "Chrome/120.0 Safari/537.36"
-            )
+            "User-Agent": "Mozilla/5.0"
         }
 
         response = requests.get(
@@ -35,7 +24,6 @@ def scrape_webpage(url: str) -> str:
 
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # Remove elements that don't contain useful article content
         for element in soup(
             ["script", "style", "nav", "footer", "header", "aside"]
         ):
@@ -46,7 +34,6 @@ def scrape_webpage(url: str) -> str:
             strip=True,
         )
 
-        # Prevent extremely large pages from overwhelming the LLM
         max_chars = 12000
 
         if len(text) > max_chars:
