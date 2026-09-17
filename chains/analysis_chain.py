@@ -1,23 +1,48 @@
+import os
+
+from dotenv import load_dotenv
+from huggingface_hub import InferenceClient
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_huggingface import ChatHuggingFace, HuggingFaceEndpoint
+from langchain_core.runnables import RunnableLambda
 
 from prompts.analyst import ANALYST_PROMPT
 
+load_dotenv()
+
 
 def create_analysis_chain():
-    """
-    Create the LangChain pipeline used by the Analyst Agent.
-    """
+    """Create the analysis pipeline using Hugging Face InferenceClient."""
 
-    llm = HuggingFaceEndpoint(
-        repo_id="Qwen/Qwen3-4B",
-        task="text-generation",
-        max_new_tokens=1000,
-        temperature=0.2,
+    token = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+
+    if not token:
+        raise ValueError(
+            "HUGGINGFACEHUB_API_TOKEN is not set in the environment."
+        )
+
+    client = InferenceClient(
+        api_key=token,
+        provider="auto",
     )
-
-    chat_model = ChatHuggingFace(llm=llm)
 
     prompt = ChatPromptTemplate.from_template(ANALYST_PROMPT)
 
-    return prompt | chat_model
+    def generate_analysis(messages):
+        response = client.chat.completions.create(
+            model="Qwen/Qwen3-4B-Instruct-2507",
+            messages=[
+                {
+                    "role": role,
+                    "content": content,
+                }
+                for role, content in messages
+            ],
+            max_tokens=1000,
+            temperature=0.2,
+        )
+
+        return response.choices[0].message.content
+
+    llm = RunnableLambda(generate_analysis)
+
+    return prompt | llm
