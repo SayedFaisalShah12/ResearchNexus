@@ -15,4 +15,4 @@ def analyze_research(query: str, research_material: str) -> str:
         }
     )
 
-    return response.content
+    return response
