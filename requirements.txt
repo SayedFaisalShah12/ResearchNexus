@@ -16,4 +16,4 @@ pydantic
 streamlit
 
 pytest
-pytest-asyncio
+pytest-asyncio    ##.venv\Scripts\Activate.ps1

@@ -28,24 +28,36 @@ def create_writer_chain():
 
     prompt = ChatPromptTemplate.from_template(WRITER_PROMPT)
 
-    def generate_report(messages):
+    def generate_report(prompt_value):
+        """Generate a report from the formatted LangChain prompt."""
+
+        # ChatPromptTemplate produces a ChatPromptValue.
+        # Convert it directly to LangChain messages.
+        messages = prompt_value.to_messages()
+
         hf_messages = []
 
         for message in messages:
-            if hasattr(message, "type") and hasattr(message, "content"):
-                role = message.type
+            role = message.type
 
-                if role == "human":
-                    role = "user"
-                elif role == "ai":
-                    role = "assistant"
+            if role == "human":
+                role = "user"
+            elif role == "ai":
+                role = "assistant"
+            elif role == "system":
+                role = "system"
 
-                hf_messages.append(
-                    {
-                        "role": role,
-                        "content": str(message.content),
-                    }
-                )
+            hf_messages.append(
+                {
+                    "role": role,
+                    "content": str(message.content),
+                }
+            )
+
+        if not hf_messages:
+            raise ValueError(
+                "Writer chain produced no messages for Hugging Face."
+            )
 
         response = client.chat.completions.create(
             model="Qwen/Qwen3-4B-Instruct-2507",
