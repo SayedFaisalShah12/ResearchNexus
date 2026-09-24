@@ -6,7 +6,9 @@ from schemas.state import ResearchState
 
 
 def research_node(state: ResearchState) -> dict:
-    """Run the Research Agent and update the shared state."""
+    """
+    Run the Research Agent and collect web research.
+    """
 
     query = state["query"]
 
@@ -19,7 +21,9 @@ def research_node(state: ResearchState) -> dict:
 
 
 def analyst_node(state: ResearchState) -> dict:
-    """Run the Analyst Agent using the collected research."""
+    """
+    Run the Analyst Agent on the collected research.
+    """
 
     query = state["query"]
     documents = state.get("documents", [])
@@ -41,7 +45,37 @@ def analyst_node(state: ResearchState) -> dict:
 
 
 def writer_node(state: ResearchState) -> dict:
-    """Run the Writer Agent using research and analysis."""
+    """
+    Run the Writer Agent to create or revise a research report.
+    """
+
+    query = state["query"]
+    documents = state.get("documents", [])
+    analysis = state.get("analysis", "")
+
+    previous_draft = state.get("draft", "")
+    critique = state.get("critique", "")
+
+    research_material = "\n\n".join(
+        f"URL: {document.get('url', '')}\n"
+        f"CONTENT:\n{document.get('content', '')}"
+        for document in documents
+    )
+
+    draft = write_report(
+        query=query,
+        research_material=research_material,
+        analysis=analysis,
+        previous_draft=previous_draft,
+        critique=critique,
+    )
+
+    return {
+        "draft": draft,
+    }
+    """
+    Run the Writer Agent to create a research report draft.
+    """
 
     query = state["query"]
     documents = state.get("documents", [])
@@ -65,7 +99,9 @@ def writer_node(state: ResearchState) -> dict:
 
 
 def critic_node(state: ResearchState) -> dict:
-    """Run the Critic Agent against the current draft."""
+    """
+    Run the Critic Agent to evaluate the draft.
+    """
 
     query = state["query"]
     documents = state.get("documents", [])
@@ -87,4 +123,32 @@ def critic_node(state: ResearchState) -> dict:
 
     return {
         "critique": critique,
+    }
+
+
+def decision_node(state: ResearchState) -> dict:
+    """
+    Decide whether the draft is approved or requires revision.
+    """
+
+    critique = state.get("critique", "")
+    revision_count = state.get("revision_count", 0)
+
+    max_revisions = 2
+
+    if "APPROVED" in critique.upper():
+        return {
+            "approved": True,
+            "final_report": state.get("draft", ""),
+        }
+
+    if revision_count >= max_revisions:
+        return {
+            "approved": True,
+            "final_report": state.get("draft", ""),
+        }
+
+    return {
+        "approved": False,
+        "revision_count": revision_count + 1,
     }
