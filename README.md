@@ -112,3 +112,27 @@ ResearchNexus follows a multi-agent workflow orchestrated using **LangGraph**.
              │    Writer   │                │ Final Report │
              │   Revision  │                └──────────────┘
              └─────────────┘
+
+
+Agent Workflow:
+
+User
+  │
+  ▼
+Research Agent
+  │
+  ▼
+Analyst Agent
+  │
+  ▼
+Writer Agent
+  │
+  ▼
+Critic Agent
+  │
+  ▼
+Decision Node
+  │
+  ├── APPROVED ───────────────► Final Report
+  │
+  └── REVISION_REQUIRED ──────► Writer Agent             
